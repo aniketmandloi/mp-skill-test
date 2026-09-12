@@ -6,7 +6,7 @@ import { Empty, EmptyDescription, EmptyTitle } from "@mp-skill-test/ui/component
 import { Input } from "@mp-skill-test/ui/components/input";
 import { Label } from "@mp-skill-test/ui/components/label";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { trpc } from "@/utils/trpc";
 
@@ -20,9 +20,20 @@ const WEEKDAYS = [
   { day: 0, label: "Sun" },
 ] as const;
 
-export default function Habits() {
+export default function Habits({ storedTimezone }: { storedTimezone: string | null }) {
   const queryClient = useQueryClient();
   const habits = useQuery(trpc.habit.list.queryOptions());
+
+  const setTimezone = useMutation(trpc.user.setTimezone.mutationOptions());
+
+  useEffect(() => {
+    const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    if (browserTimezone && browserTimezone !== storedTimezone) {
+      setTimezone.mutate({ timezone: browserTimezone });
+    }
+    // Reporting once per mount is enough; the mutation is deliberately not a dependency.
+  }, [storedTimezone]);
 
   const [name, setName] = useState("");
   const [scheduleDays, setScheduleDays] = useState<number[]>([]);

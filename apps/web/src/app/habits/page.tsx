@@ -17,5 +17,5 @@ export default async function HabitsPage() {
     redirect("/login");
   }
 
-  return <Habits />;
+  return <Habits storedTimezone={session.user.timezone ?? null} />;
 }
