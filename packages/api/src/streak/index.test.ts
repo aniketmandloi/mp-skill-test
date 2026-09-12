@@ -55,6 +55,27 @@ describe("computeStreak", () => {
     ).toBe(2);
   });
 
+  it("stops at a gap rather than running to the start of the record", () => {
+    expect(
+      computeStreak({
+        scheduleDays: MON_WED_FRI,
+        checkInDates: ["2026-09-02", "2026-09-07", "2026-09-09"],
+        today: "2026-09-09",
+      }),
+    ).toBe(2);
+  });
+
+  // ADR-0001: history re-reads itself against the habit's current schedule.
+  it("revives a broken streak when the missed weekday is dropped from the schedule", () => {
+    expect(
+      computeStreak({
+        scheduleDays: [1, 3],
+        checkInDates: ["2026-09-02", "2026-09-07", "2026-09-09"],
+        today: "2026-09-09",
+      }),
+    ).toBe(3);
+  });
+
   it("is zero for a habit with no scheduled days", { timeout: 1000 }, () => {
     expect(
       computeStreak({
