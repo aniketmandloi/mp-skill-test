@@ -63,3 +63,7 @@ temp
 # Per-machine agent tool wiring (symlinks into the globally-ignored .agents/)
 .crush/
 .grok/
+
+# Skills are vendored into this repo so a clone is self-contained
+!.agents/
+!.claude/
