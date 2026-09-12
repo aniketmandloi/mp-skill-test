@@ -4,6 +4,7 @@ import {
   listHabits,
   listHabitsWithCheckIns,
   toggleCheckIn,
+  updateHabitSchedule,
 } from "@mp-skill-test/db/habits";
 import { TRPCError } from "@trpc/server";
 import z from "zod";
@@ -69,6 +70,22 @@ export const habitRouter = router({
       scheduleDays: input.scheduleDays,
     }),
   ),
+
+  updateSchedule: protectedProcedure
+    .input(z.object({ id: z.string(), scheduleDays: habitInput.shape.scheduleDays }))
+    .mutation(async ({ ctx, input }) => {
+      const updated = await updateHabitSchedule(ctx.db, {
+        id: input.id,
+        userId: ctx.session.user.id,
+        scheduleDays: input.scheduleDays,
+      });
+
+      if (!updated) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Habit not found" });
+      }
+
+      return updated;
+    }),
 
   delete: protectedProcedure
     .input(z.object({ id: z.string() }))

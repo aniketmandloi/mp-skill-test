@@ -92,3 +92,16 @@ export async function toggleCheckIn(
 
   return { checkedIn: true };
 }
+
+export async function updateHabitSchedule(
+  db: Database,
+  { id, userId, scheduleDays }: { id: string; userId: string; scheduleDays: number[] },
+) {
+  const [updated] = await db
+    .update(habit)
+    .set({ scheduleDays })
+    .where(and(eq(habit.id, id), eq(habit.userId, userId)))
+    .returning();
+
+  return updated;
+}

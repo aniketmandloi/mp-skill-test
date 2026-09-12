@@ -65,6 +65,23 @@ export default function Habits({ storedTimezone }: { storedTimezone: string | nu
     trpc.habit.toggleCheckIn.mutationOptions({ onSuccess: () => void invalidate() }),
   );
 
+  const updateSchedule = useMutation(
+    trpc.habit.updateSchedule.mutationOptions({ onSuccess: () => void invalidate() }),
+  );
+
+  const rescheduleHabit = (habitId: string, scheduleDays: number[], day: number) => {
+    const next = scheduleDays.includes(day)
+      ? scheduleDays.filter((d) => d !== day)
+      : [...scheduleDays, day];
+
+    // A habit with no scheduled days would never come round again.
+    if (next.length === 0) {
+      return;
+    }
+
+    updateSchedule.mutate({ id: habitId, scheduleDays: next });
+  };
+
   const toggleDay = (day: number) =>
     setScheduleDays((days) =>
       days.includes(day) ? days.filter((d) => d !== day) : [...days, day],
@@ -162,13 +179,23 @@ export default function Habits({ storedTimezone }: { storedTimezone: string | nu
               key={habit.id}
               className="flex items-center justify-between rounded-md border px-4 py-3"
             >
-              <div className="flex flex-col">
+              <div className="flex flex-col gap-2">
                 <span className="font-medium">{habit.name}</span>
-                <span className="text-muted-foreground text-sm">
-                  {WEEKDAYS.filter(({ day }) => habit.scheduleDays.includes(day))
-                    .map(({ label }) => label)
-                    .join(", ")}
-                </span>
+                <div className="flex flex-wrap gap-1">
+                  {WEEKDAYS.map(({ day, label }) => (
+                    <Button
+                      key={day}
+                      type="button"
+                      size="sm"
+                      variant={habit.scheduleDays.includes(day) ? "default" : "outline"}
+                      aria-pressed={habit.scheduleDays.includes(day)}
+                      disabled={updateSchedule.isPending}
+                      onClick={() => rescheduleHabit(habit.id, habit.scheduleDays, day)}
+                    >
+                      {label}
+                    </Button>
+                  ))}
+                </div>
               </div>
               <Button
                 variant="ghost"
