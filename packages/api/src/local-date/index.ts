@@ -21,3 +21,9 @@ function formatterFor(timezone: string | null | undefined) {
 export function resolveLocalDate({ timezone, now = new Date() }: ResolveLocalDateInput) {
   return formatterFor(timezone).format(now);
 }
+
+/** The weekday of a local date, 0 = Sunday, matching a habit's scheduleDays. */
+export function weekdayOf(localDate: string) {
+  // Noon avoids any chance of the parsed instant landing on an adjacent day.
+  return new Date(`${localDate}T12:00:00Z`).getUTCDay();
+}

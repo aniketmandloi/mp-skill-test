@@ -56,9 +56,9 @@ export async function listHabitsWithCheckIns(db: Database, userId: string) {
     datesByHabit.set(row.habitId, dates);
   }
 
-  return habits.map((entry) => ({
-    ...entry,
-    checkInDates: datesByHabit.get(entry.id) ?? [],
+  return habits.map((habitRow) => ({
+    ...habitRow,
+    checkInDates: datesByHabit.get(habitRow.id) ?? [],
   }));
 }
 

@@ -10,7 +10,7 @@ import { TRPCError } from "@trpc/server";
 import z from "zod";
 
 import { protectedProcedure, router } from "../index";
-import { resolveLocalDate } from "../local-date/index";
+import { resolveLocalDate, weekdayOf } from "../local-date/index";
 import { computeStreak } from "../streak/index";
 
 const weekday = z.number().int().min(0).max(6);
@@ -29,19 +29,19 @@ export const habitRouter = router({
   /** The habits scheduled for the user's today, each with its streak. */
   today: protectedProcedure.query(async ({ ctx }) => {
     const today = resolveLocalDate({ timezone: ctx.session.user.timezone });
-    const weekdayToday = new Date(`${today}T12:00:00Z`).getUTCDay();
+    const weekdayToday = weekdayOf(today);
     const habits = await listHabitsWithCheckIns(ctx.db, ctx.session.user.id);
 
     return habits
-      .filter((entry) => entry.scheduleDays.includes(weekdayToday))
-      .map((entry) => ({
-        id: entry.id,
-        name: entry.name,
-        scheduleDays: entry.scheduleDays,
-        checkedIn: entry.checkInDates.includes(today),
+      .filter((scheduled) => scheduled.scheduleDays.includes(weekdayToday))
+      .map((scheduled) => ({
+        id: scheduled.id,
+        name: scheduled.name,
+        scheduleDays: scheduled.scheduleDays,
+        checkedIn: scheduled.checkInDates.includes(today),
         streak: computeStreak({
-          scheduleDays: entry.scheduleDays,
-          checkInDates: entry.checkInDates,
+          scheduleDays: scheduled.scheduleDays,
+          checkInDates: scheduled.checkInDates,
           today,
         }),
       }));

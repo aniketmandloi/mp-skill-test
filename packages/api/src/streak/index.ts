@@ -1,14 +1,15 @@
+import { weekdayOf } from "../local-date/index";
+
 export type ComputeStreakInput = {
   scheduleDays: number[];
   checkInDates: string[];
   today: string;
 };
 
+
 const DAY_MS = 86_400_000;
 
 const asDate = (localDate: string) => new Date(`${localDate}T12:00:00Z`);
-
-const weekdayOf = (localDate: string) => asDate(localDate).getUTCDay();
 
 const dayBefore = (localDate: string) =>
   new Date(asDate(localDate).getTime() - DAY_MS).toISOString().slice(0, 10);
