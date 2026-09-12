@@ -66,31 +66,36 @@ export async function listHabitsWithCheckIns(db: Database, userId: string) {
  * Adds or removes the check-in for one local date, returning whether the habit
  * is checked in afterwards. Returns null when the habit is not the user's.
  */
-export async function toggleCheckIn(
+export function toggleCheckIn(
   db: Database,
-  { habitId, userId, date }: { habitId: string; userId: string; date: string },
+  { habitId, userId, localDate }: { habitId: string; userId: string; localDate: string },
 ) {
-  const [owned] = await db
-    .select({ id: habit.id })
-    .from(habit)
-    .where(and(eq(habit.id, habitId), eq(habit.userId, userId)));
+  // One transaction: two taps racing must not both see "not checked in" and
+  // collide on the unique index.
+  return db.transaction(async (tx) => {
+    const [owned] = await tx
+      .select({ id: habit.id })
+      .from(habit)
+      .where(and(eq(habit.id, habitId), eq(habit.userId, userId)))
+      .for("update");
 
-  if (!owned) {
-    return null;
-  }
+    if (!owned) {
+      return null;
+    }
 
-  const [removed] = await db
-    .delete(checkIn)
-    .where(and(eq(checkIn.habitId, habitId), eq(checkIn.date, date)))
-    .returning({ id: checkIn.id });
+    const [removed] = await tx
+      .delete(checkIn)
+      .where(and(eq(checkIn.habitId, habitId), eq(checkIn.date, localDate)))
+      .returning({ id: checkIn.id });
 
-  if (removed) {
-    return { checkedIn: false };
-  }
+    if (removed) {
+      return { checkedIn: false };
+    }
 
-  await db.insert(checkIn).values({ id: crypto.randomUUID(), habitId, date });
+    await tx.insert(checkIn).values({ id: crypto.randomUUID(), habitId, date: localDate });
 
-  return { checkedIn: true };
+    return { checkedIn: true };
+  });
 }
 
 export async function updateHabitSchedule(

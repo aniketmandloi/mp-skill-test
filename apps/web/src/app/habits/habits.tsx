@@ -26,7 +26,16 @@ export default function Habits({ storedTimezone }: { storedTimezone: string | nu
   const habits = useQuery(trpc.habit.list.queryOptions());
   const today = useQuery(trpc.habit.today.queryOptions());
 
-  const setTimezone = useMutation(trpc.user.setTimezone.mutationOptions());
+  const invalidate = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: trpc.habit.list.queryKey() }),
+      queryClient.invalidateQueries({ queryKey: trpc.habit.today.queryKey() }),
+    ]);
+  };
+
+  const setTimezone = useMutation(
+    trpc.user.setTimezone.mutationOptions({ onSuccess: () => void invalidate() }),
+  );
 
   useEffect(() => {
     const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -39,13 +48,6 @@ export default function Habits({ storedTimezone }: { storedTimezone: string | nu
 
   const [name, setName] = useState("");
   const [scheduleDays, setScheduleDays] = useState<number[]>([]);
-
-  const invalidate = async () => {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: trpc.habit.list.queryKey() }),
-      queryClient.invalidateQueries({ queryKey: trpc.habit.today.queryKey() }),
-    ]);
-  };
 
   const create = useMutation(
     trpc.habit.create.mutationOptions({

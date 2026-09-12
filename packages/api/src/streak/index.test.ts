@@ -76,6 +76,16 @@ describe("computeStreak", () => {
     ).toBe(3);
   });
 
+  it("is zero for a habit that has never been checked in", () => {
+    expect(
+      computeStreak({
+        scheduleDays: MON_WED_FRI,
+        checkInDates: [],
+        today: "2026-09-11",
+      }),
+    ).toBe(0);
+  });
+
   it("is zero for a habit with no scheduled days", { timeout: 1000 }, () => {
     expect(
       computeStreak({

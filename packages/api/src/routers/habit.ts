@@ -53,7 +53,7 @@ export const habitRouter = router({
       const toggled = await toggleCheckIn(ctx.db, {
         habitId: input.habitId,
         userId: ctx.session.user.id,
-        date: resolveLocalDate({ timezone: ctx.session.user.timezone }),
+        localDate: resolveLocalDate({ timezone: ctx.session.user.timezone }),
       });
 
       if (!toggled) {
