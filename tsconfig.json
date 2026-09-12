@@ -1,0 +1,3 @@
+{
+  "extends": "@mp-skill-test/config/tsconfig.base.json"
+}

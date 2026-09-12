@@ -1,0 +1,6 @@
+{
+  "extends": "@mp-skill-test/config/tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true
+  }
+}

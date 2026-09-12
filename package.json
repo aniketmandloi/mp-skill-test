@@ -1,0 +1,34 @@
+{
+  "name": "mp-skill-test",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "check-types": "turbo run check-types",
+    "dev:native": "turbo run dev -F native --",
+    "dev:web": "turbo run dev -F web --",
+    "dev:server": "turbo run dev -F server --",
+    "db:push": "turbo run db:push -F @mp-skill-test/db --",
+    "db:studio": "turbo run db:studio -F @mp-skill-test/db --",
+    "db:generate": "turbo run db:generate -F @mp-skill-test/db --",
+    "db:migrate": "turbo run db:migrate -F @mp-skill-test/db --",
+    "env:generate": "varlock codegen --path ./apps/web/ && varlock codegen --path ./apps/server/ && varlock codegen --path ./apps/native/ && varlock codegen --path ./packages/db/",
+    "postinstall": "varlock codegen --path ./apps/web/ && varlock codegen --path ./apps/server/ && varlock codegen --path ./apps/native/ && varlock codegen --path ./packages/db/"
+  },
+  "dependencies": {
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@mp-skill-test/config": "workspace:*",
+    "@types/node": "catalog:",
+    "turbo": "^2.10.12",
+    "typescript": "^6.0.3",
+    "varlock": "catalog:"
+  },
+  "packageManager": "pnpm@12.3.4"
+}
