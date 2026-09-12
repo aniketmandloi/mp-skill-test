@@ -1,7 +1,7 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 
 import type { Database } from "./index";
-import { habit } from "./schema/habit";
+import { checkIn, habit } from "./schema/habit";
 
 export type NewHabit = {
   userId: string;
@@ -29,4 +29,66 @@ export async function deleteHabit(db: Database, { id, userId }: { id: string; us
     .returning({ id: habit.id });
 
   return deleted;
+}
+
+/** Every habit the user owns, each with the local dates it was checked in on. */
+export async function listHabitsWithCheckIns(db: Database, userId: string) {
+  const habits = await listHabits(db, userId);
+
+  if (habits.length === 0) {
+    return [];
+  }
+
+  const checkIns = await db
+    .select({ habitId: checkIn.habitId, date: checkIn.date })
+    .from(checkIn)
+    .where(
+      inArray(
+        checkIn.habitId,
+        habits.map(({ id }) => id),
+      ),
+    );
+
+  const datesByHabit = new Map<string, string[]>();
+  for (const row of checkIns) {
+    const dates = datesByHabit.get(row.habitId) ?? [];
+    dates.push(row.date);
+    datesByHabit.set(row.habitId, dates);
+  }
+
+  return habits.map((entry) => ({
+    ...entry,
+    checkInDates: datesByHabit.get(entry.id) ?? [],
+  }));
+}
+
+/**
+ * Adds or removes the check-in for one local date, returning whether the habit
+ * is checked in afterwards. Returns null when the habit is not the user's.
+ */
+export async function toggleCheckIn(
+  db: Database,
+  { habitId, userId, date }: { habitId: string; userId: string; date: string },
+) {
+  const [owned] = await db
+    .select({ id: habit.id })
+    .from(habit)
+    .where(and(eq(habit.id, habitId), eq(habit.userId, userId)));
+
+  if (!owned) {
+    return null;
+  }
+
+  const [removed] = await db
+    .delete(checkIn)
+    .where(and(eq(checkIn.habitId, habitId), eq(checkIn.date, date)))
+    .returning({ id: checkIn.id });
+
+  if (removed) {
+    return { checkedIn: false };
+  }
+
+  await db.insert(checkIn).values({ id: crypto.randomUUID(), habitId, date });
+
+  return { checkedIn: true };
 }

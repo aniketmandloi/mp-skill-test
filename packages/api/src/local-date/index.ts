@@ -1,9 +1,9 @@
 export type ResolveLocalDateInput = {
-  timezone: string | null;
+  timezone: string | null | undefined;
   now?: Date;
 };
 
-function formatterFor(timezone: string | null) {
+function formatterFor(timezone: string | null | undefined) {
   const options = {
     year: "numeric",
     month: "2-digit",
